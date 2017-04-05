@@ -79,12 +79,25 @@
     //
     // test if a specific row on this board contains a conflict
     hasRowConflictAt: function(rowIndex) {
-      return false; // fixme
+      let countPiece = 0;
+      for (let rowElement of this.get(rowIndex)){
+        if (rowElement === 1) {
+          countPiece++;
+        }
+        if (countPiece > 1) {
+          return true;
+        }
+      }
+      return false; 
     },
 
     // test if any rows on this board contain conflicts
     hasAnyRowConflicts: function() {
-      return false; // fixme
+      let conflicts = false;
+      for (let rowIndex = 0; rowIndex < this.rows().length; rowIndex++) {
+        conflicts = conflicts || this.hasRowConflictAt(rowIndex);
+      }
+      return conflicts; 
     },
 
 
@@ -94,12 +107,25 @@
     //
     // test if a specific column on this board contains a conflict
     hasColConflictAt: function(colIndex) {
-      return false; // fixme
+      let countPiece = 0;
+      for (let row of this.rows()){
+        if (row[colIndex] === 1) {
+          countPiece++;
+        }
+        if (countPiece > 1) {
+          return true;
+        }
+      }
+      return false; 
     },
 
     // test if any columns on this board contain conflicts
     hasAnyColConflicts: function() {
-      return false; // fixme
+      let conflicts = false;
+      for (let colIndex = 0; colIndex < this.get(0).length; colIndex++) {
+        conflicts = conflicts || this.hasColConflictAt(colIndex);
+      }
+      return conflicts; 
     },
 
 
@@ -108,13 +134,36 @@
     // --------------------------------------------------------------
     //
     // test if a specific major diagonal on this board contains a conflict
-    hasMajorDiagonalConflictAt: function(majorDiagonalColumnIndexAtFirstRow) {
-      return false; // fixme
+    hasMajorDiagonalConflictAt: function(rowIndex, colIndex) {
+      let countPiece = 0;
+      while (this._isInBounds(rowIndex, colIndex)) {
+        if (this.get(rowIndex)[colIndex] === 1) {
+          countPiece++;
+        }
+        if (countPiece > 1) {
+          return true;
+        }
+        rowIndex++;
+        colIndex++;
+      }
+      return false; 
     },
 
     // test if any major diagonals on this board contain conflicts
     hasAnyMajorDiagonalConflicts: function() {
-      return false; // fixme
+      let conflicts = false;
+      //checking bottom-left half of the matrix
+      //by iterating each row's (execpt top-left corner, which will be visit in the next loop)
+      //first col, pass to the hMDCA function;
+      for (let rowIndex = 1; rowIndex < this.rows().length; rowIndex++) {
+        conflicts = conflicts || this.hasMajorDiagonalConflictAt(rowIndex,0);
+      }
+      //checking the top-right half of the matrix
+      //by iterating through each col in the first row, pass to the hMDCA function
+      for (let colIndex = 0; colIndex < this.get(0).length; colIndex++) {
+        conflicts = conflicts || this.hasMajorDiagonalConflictAt(0,colIndex);
+      }
+      return conflicts;
     },
 
 
@@ -123,13 +172,36 @@
     // --------------------------------------------------------------
     //
     // test if a specific minor diagonal on this board contains a conflict
-    hasMinorDiagonalConflictAt: function(minorDiagonalColumnIndexAtFirstRow) {
-      return false; // fixme
+    hasMinorDiagonalConflictAt: function(rowIndex, colIndex) {
+      let countPiece = 0;
+      while (this._isInBounds(rowIndex, colIndex)) {
+        if (this.get(rowIndex)[colIndex] === 1) {
+          countPiece++;
+        }
+        if (countPiece > 1) {
+          return true;
+        }
+        rowIndex++;
+        colIndex--;
+      }
+      return false; 
     },
 
     // test if any minor diagonals on this board contain conflicts
     hasAnyMinorDiagonalConflicts: function() {
-      return false; // fixme
+      let conflicts = false;
+      //checking bottom-left half of the matrix
+      //by iterating each row's (execpt top-left corner, which will be visit in the next loop)
+      //first col, pass to the hMDCA function;
+      for (let rowIndex = 1; rowIndex < this.rows().length; rowIndex++) {
+        conflicts = conflicts || this.hasMinorDiagonalConflictAt(rowIndex,this.get(0).length-1);
+      }
+      //checking the top-right half of the matrix
+      //by iterating through each col in the first row, pass to the hMDCA function
+      for (let colIndex = 0; colIndex < this.get(0).length; colIndex++) {
+        conflicts = conflicts || this.hasMinorDiagonalConflictAt(0,colIndex);
+      }
+      return conflicts;
     }
 
     /*--------------------  End of Helper Functions  ---------------------*/
