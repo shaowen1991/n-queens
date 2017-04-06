@@ -202,6 +202,25 @@
         conflicts = conflicts || this.hasMinorDiagonalConflictAt(0,colIndex);
       }
       return conflicts;
+    },
+
+    hasAnyElementInRow: function(rowIndex) {
+      let row = this.get(rowIndex);
+      for (let rowElement of row) {
+        if (rowElement === 1) {
+          return true;
+        }
+      }
+      return false;
+    },
+
+    hasAnyElementInCol: function(colIndex) {
+      for (let row of this.rows()) {
+        if (row[colIndex] === 1) {
+          return true;
+        }
+      }
+      return false;
     }
 
     /*--------------------  End of Helper Functions  ---------------------*/
