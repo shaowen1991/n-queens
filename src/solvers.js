@@ -13,15 +13,13 @@
 
 // return a matrix (an array of arrays) representing a single nxn chessboard, with n rooks placed such that none of them can attack each other
 
-
-
 window.findNRooksSolution = function(n) {
-  let solution = new Board({n:n}); //fixme
+  let solution = new Board({n: n}); //fixme
   //loop through every row/col in the matrix
-  for (let row = 0; row < solution.rows().length; row++) {
-    for (let col = 0; col < solution.rows()[row].length; col++) {
-      // solution.togglePiece(row, col);
-      if (!solution.hasAnyElementInRow(row) && !solution.hasAnyElementInCol(col)) {
+  for (let row = 0; row < n; row++) {
+    for (let col = 0; col < n; col++) {
+      solution.togglePiece(row, col);
+      if (solution.hasAnyRooksConflicts()) {
         solution.togglePiece(row, col);
       }
     }
@@ -30,70 +28,188 @@ window.findNRooksSolution = function(n) {
   return solution.rows();
 };
 
-window.findNRooksSolutionForCount = function(n, startRow, startCol) {
-  let solution = new Board({n: n}); 
-  //loop through every row/col after the start point in the matrix
-  for (let row = startRow; row < solution.rows().length; row++) {
-    if (row !== startRow) {
-      for (let col = 0; col < solution.get(0).length; col++){
-        if (!solution.hasAnyElementInRow(row) && !solution.hasAnyElementInCol(col)) {
-          solution.togglePiece(row, col);
-        }
-      }
-    } else {
-      for (let col = startCol; col < solution.get(0).length; col++) {
-        if (!solution.hasAnyElementInRow(row) && !solution.hasAnyElementInCol(col)) {
-          solution.togglePiece(row, col);
-        }
-      }
-    }
-  }
+// return the number of nxn chessboards that exist, with n rooks placed such that none of them can attack each other
+// window.countNRooksSolutions_slow = function(n) {
+//   let solutionSet = new Set();
+//   for (let col = 0; col < n; col++) {
+//     rooksDecisionTree(new Board({n:n}), 0, col);
+//   }
+//   function rooksDecisionTree(prevMatrix, row, col) {
+//     if (prevMatrix.hasAnyElementInRow(row) || prevMatrix.hasAnyElementInCol(col)) {
+//       return;
+//     }
+//     //creat a new instance
+//     let nextSolution = new Board({n:n});
+//     //copy every element from prevMatrix arrays to nextSolution
+//     nextSolution.copyMatrixFromArray(prevMatrix.rows());
+//     //toggle
+//     nextSolution.togglePiece(row, col);
+//     if (row === n - 1) {
+//       // console.log(nextSolution.rows());
+//       solutionSet.add(nextSolution);
+//     } else {
+//       for (let childCol = 0; childCol < n; childCol++) {
+//         rooksDecisionTree(nextSolution, row + 1, childCol);
+//       }
+//     }
+//   };
+//   console.log('Number of solutions for ' + n + ' rooks:', solutionSet.size);
+//   return solutionSet.size;
+// };
 
-  //loop through every row/col before the start point in the matrix
-  for (let row = 0; row <= startRow; row++) {
-    if (row !== startRow) {
-      for (let col = 0; col < solution.get(0).length; col++){
-        if (!solution.hasAnyElementInRow(row) && !solution.hasAnyElementInCol(col)) {
-          solution.togglePiece(row, col);
-        }
-      }
+window.countNRooksSolutions = function(n) {
+  let solutionSet = new Set();
+  //start of help functions
+  //recursive call function
+  let rooksDecisionTree = function(prevMatrix, row, col) {
+    if (hasAnyElementInCol(prevMatrix, col)) {
+      return;
+    }
+    //e.g. nextRow = [[0,1,0]]
+    let nextRow = [Array.apply(null, Array(n)).map(Number.prototype.valueOf, 0)];
+    //toggle
+    nextRow[0][col] = 1;
+    //concat newRow to newSolution e.g. [[1,0,0],[0,1,0]]
+    let nextSolution = prevMatrix.concat(nextRow);
+    if (row === n - 1) {
+      // console.log(nextSolution.rows());
+      solutionSet.add(nextSolution);
     } else {
-      for (let col = 0; col < startCol; col++) {
-        if (!solution.hasAnyElementInRow(row) && !solution.hasAnyElementInCol(col)) {
-          solution.togglePiece(row, col);
-        }
+      for (let childCol = 0; childCol < n; childCol++) {
+        rooksDecisionTree(nextSolution, row + 1, childCol);
       }
     }
+  };
+  //end of help functions
+  //start from each col in the first row
+  for (let col = 0; col < n; col++) {
+    rooksDecisionTree([], 0, col);
   }
-  console.log(`Single solution for ${n} rooks starting at: ${startRow},${startCol} ${JSON.stringify(solution.rows())}`);
-  return solution;
+  console.log('Number of solutions for ' + n + ' rooks:', solutionSet.size);
+  return solutionSet.size;
 };
 
-// return the number of nxn chessboards that exist, with n rooks placed such that none of them can attack each other
-window.countNRooksSolutions = function(n) {
-  // let solutionCount = 0; //fixme
-  let solutionSet = new Set();
-  for (let x = 0; x < n; x++) {
-    for (let y = 0; y < n; y++) {
-      solutionSet.add(JSON.stringify(findNRooksSolutionForCount(n, x, y).rows()));
+//new conflicts testing function, and because we starting a new row, we only need to check column conflicts
+window.hasAnyElementInCol = function(matrix, col) {
+  if (matrix.length === 0) {
+    return false;
+  }
+  for (let row = 0; row < matrix.length; row++) {
+    if (matrix[row][col] === 1) {
+      return true;
     }
   }
-  // console.log('Number of solutions for ' + n + ' rooks:', solutionSet.size);
-  return solutionSet.size;
+  return false;
 };
 
 // return a matrix (an array of arrays) representing a single nxn chessboard, with n queens placed such that none of them can attack each other
 window.findNQueensSolution = function(n) {
-  var solution = undefined; //fixme
+  if (n === 0) {
+    return [];
+  }
+  let solution;
+  //start of help functions
+  //recursive call function
+  let rooksDecisionTree = function(prevMatrix, row, col) {
+    //if we found our solution matrix, skip all recursion
+    if (solution !== undefined) {
+      return;
+    }
+    //if there's any conficts, skip this branch
+    if (hasAnyElementInColAndDiagonal(prevMatrix, col)) {
+      return;
+    }
+    //e.g. nextRow = [[0,1,0]]
+    let nextRow = [Array.apply(null, Array(n)).map(Number.prototype.valueOf, 0)];
+    //toggle
+    nextRow[0][col] = 1;
+    //concat newRow to newSolution e.g. [[1,0,0],[0,0,1]]
+    let nextSolution = prevMatrix.concat(nextRow);
+    if (row === n - 1) {
+      //previous line garentee there is not conflicts
+      //at the last row, we get our one solution, assign it to the solution
+      //and because we only do this in the last row, so the number of toggled pieces always = n
+      solution = new Board(nextSolution);
+    } else {
+      for (let childCol = 0; childCol < n; childCol++) {
+        rooksDecisionTree(nextSolution, row + 1, childCol);
+      }
+    }
+  };
+  //end of help functions
+  //start from each col in the first row
+  for (let col = 0; col < n; col++) {
+    rooksDecisionTree([], 0, col);
+  }
+  //if there's no good solution was found, return a empty n*n board
+  if (solution === undefined) {
+    return new Board({n: n}).rows();
+  }
+  console.log('Single solution for ' + n + ' rooks:', JSON.stringify(solution.rows()));
+  return solution.rows();
+};
 
-  console.log('Single solution for ' + n + ' queens:', JSON.stringify(solution));
-  return solution;
+//new conflicts testing function
+window.hasAnyElementInColAndDiagonal = function(matrix, col) {
+  if (matrix.length === 0) {
+    return false;
+  }
+  //check for col
+  for (let row = 0; row < matrix.length; row++) {
+    if (matrix[row][col] === 1) {
+      return true;
+    }
+  }
+  //check for major diagonal
+  for (let colIndex = col - 1, row = matrix.length - 1; row >= 0; row--, colIndex--) {
+    if (matrix[row][colIndex] === 1) {
+      return true;
+    }
+  }
+  //check for minor diagonal
+  for (let colIndex = col + 1, row = matrix.length - 1; row >= 0; row--, colIndex++) {
+    if (matrix[row][colIndex] === 1) {
+      return true;
+    }
+  }
+  return false;
 };
 
 // return the number of nxn chessboards that exist, with n queens placed such that none of them can attack each other
 window.countNQueensSolutions = function(n) {
-  var solutionCount = undefined; //fixme
-
-  console.log('Number of solutions for ' + n + ' queens:', solutionCount);
-  return solutionCount;
+  if (n === 0) {
+    return 1;
+  }
+  let solution = new Set();
+  //start of help functions
+  //recursive call function
+  let rooksDecisionTree = function(prevMatrix, row, col) {
+    //if there's any conficts, skip this branch
+    if (hasAnyElementInColAndDiagonal(prevMatrix, col)) {
+      return;
+    }
+    //e.g. nextRow = [[0,1,0]]
+    let nextRow = [Array.apply(null, Array(n)).map(Number.prototype.valueOf, 0)];
+    //toggle
+    nextRow[0][col] = 1;
+    //concat newRow to newSolution e.g. [[1,0,0],[0,0,1]]
+    let nextSolution = prevMatrix.concat(nextRow);
+    if (row === n - 1) {
+      //previous line garentee there is not conflicts
+      //at the last row, we get our one solution, add it to the solution
+      //and because we only do this in the last row, so the number of toggled pieces always = n
+      solution.add(nextSolution);
+    } else {
+      for (let childCol = 0; childCol < n; childCol++) {
+        rooksDecisionTree(nextSolution, row + 1, childCol);
+      }
+    }
+  };
+  //end of help function
+  //start from each col in the first row
+  for (let col = 0; col < n; col++) {
+    rooksDecisionTree([], 0, col);
+  }
+  console.log('Number of solutions for ' + n + ' queens:', solution.size);
+  return solution.size;
 };
