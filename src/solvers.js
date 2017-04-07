@@ -261,7 +261,7 @@ window.countNQueensSolutions = function(n) {
 };
 
 ////////////////////////////////////////////////////////////////
-////here are two differnt approchs to the countRooks problem////
+////here are two differnt approchs to the countQueens problem///
 ///     their performance is not good as the one above     /////
 ////////////////////////////////////////////////////////////////
 
