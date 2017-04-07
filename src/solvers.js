@@ -227,42 +227,37 @@ window.countNQueensSolutions = function(n) {
   if (n === 0) {
     return 1;
   }
-  let solutionCount = 0;
-  //start of help functions
-  //recursive call function
-  let rooksDecisionTree = function(prevMatrix, row, col) {
-    //if there's any conficts, skip this branch
-    if (hasAnyElementInColAndDiagonal(prevMatrix, col)) {
-      return;
-    }
-    if (row === n - 1) {
-      //previous line garentee there is not conflicts
-      //at the last row, we get our one solution, add it to the solution
-      //and because we only do this in the last row, so the number of toggled pieces always = n
-      solutionCount++;
+  let count = 0;
+  let all = -1 >>> (32 - n); // 0b1111...11 n*1
+  var bitRecursion = function (ld, cols, rd) {
+    //when cols is full of 1's, then all possible has been visited on current branch
+    if (cols === all) {
+      count++;
     } else {
-      //e.g. nextRow = [[0,1,0]]
-      let nextRow = [Array.apply(null, Array(n)).map(Number.prototype.valueOf, 0)];
-      //toggle
-      nextRow[0][col] = 1;
-      //concat newRow to newSolution e.g. [[1,0,0],[0,0,1]]
-      let nextSolution = prevMatrix.concat(nextRow);
-
-      for (let childCol = 0; childCol < n; childCol++) {
-        rooksDecisionTree(nextSolution, row + 1, childCol);
+      //we generate bits that represent all possible queen location
+      //ld and rd represent the previous row queens' diagnal attack line on the current row
+      //masking with 'all' makes all bits no exceed the boundary of the board
+      let poss = (~(ld | cols | rd) >>> 0) & all;
+      //while poss is not 0, which mean has possible locations for queen to put
+      while (poss) {
+        //toggle the rightest possible location in place
+        let toggleBit = poss & (- poss >>> 0);
+        //omit that toggle piece from the possible locations, so it won't show up in the next round
+        poss = (poss - toggleBit) >>> 0;
+        //recursive call, add toggle location to both diagnals and cols, 
+        //and for ld and rd, we shift them 
+        //so that ld, cols, rd are represent the unaviable positions in the next row
+        bitRecursion((ld | toggleBit) >> 1, cols | toggleBit, (rd | toggleBit) << 1);
       }
     }
-
   };
-  //end of help function
-  //start from each col in the first row
-  for (let col = 0; col < n; col++) {
-    rooksDecisionTree([], 0, col);
-  }
-  console.log('Number of solutions for ' + n + ' queens:', solutionCount);
+  //calling first row, no unavailable positions
+  bitRecursion(0, 0, 0);
+
+  console.log('Number of solutions for ' + n + ' queens:', count);
   let endTime = performance.now();
   console.log('Time cost: ' + (endTime - startTime));
-  return solutionCount;
+  return count;
 };
 
 ////////////////////////////////////////////////////////////////
@@ -270,7 +265,7 @@ window.countNQueensSolutions = function(n) {
 ///     their performance is not good as the one above     /////
 ////////////////////////////////////////////////////////////////
 
-// window.countNQueensSolutions_slow_set = function(n) {
+// window.countNQueensSolutions_slow_with_set = function(n) {
 //   let startTime = performance.now();
 //   if (n === 0) {
 //     return 1;
@@ -309,4 +304,48 @@ window.countNQueensSolutions = function(n) {
 //   let endTime = performance.now();
 //   console.log('Time cost: ' + (endTime - startTime));
 //   return solution.size;
+// };
+
+
+// window.countNQueensSolutions_fast_with_count = function(n) {
+//   let startTime = performance.now();
+//   if (n === 0) {
+//     return 1;
+//   }
+//   let solutionCount = 0;
+//   //start of help functions
+//   //recursive call function
+//   let rooksDecisionTree = function(prevMatrix, row, col) {
+//     //if there's any conficts, skip this branch
+//     if (hasAnyElementInColAndDiagonal(prevMatrix, col)) {
+//       return;
+//     }
+//     if (row === n - 1) {
+//       //previous line garentee there is not conflicts
+//       //at the last row, we get our one solution, add it to the solution
+//       //and because we only do this in the last row, so the number of toggled pieces always = n
+//       solutionCount++;
+//     } else {
+//       //e.g. nextRow = [[0,1,0]]
+//       let nextRow = [Array.apply(null, Array(n)).map(Number.prototype.valueOf, 0)];
+//       //toggle
+//       nextRow[0][col] = 1;
+//       //concat newRow to newSolution e.g. [[1,0,0],[0,0,1]]
+//       let nextSolution = prevMatrix.concat(nextRow);
+
+//       for (let childCol = 0; childCol < n; childCol++) {
+//         rooksDecisionTree(nextSolution, row + 1, childCol);
+//       }
+//     }
+
+//   };
+//   //end of help function
+//   //start from each col in the first row
+//   for (let col = 0; col < n; col++) {
+//     rooksDecisionTree([], 0, col);
+//   }
+//   console.log('Number of solutions for ' + n + ' queens:', solutionCount);
+//   let endTime = performance.now();
+//   console.log('Time cost: ' + (endTime - startTime));
+//   return solutionCount;
 // };
